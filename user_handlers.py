@@ -12,6 +12,8 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 # инициализируем роутер уровня модуля
 router = Router()
 
+# Класс для использования FSMContext, помогает запомнить категорию продукта
+
 
 class register_commands(StatesGroup):
     category_name = State()
@@ -26,7 +28,7 @@ button_3 = KeyboardButton(text='Мои заказы 🕐')
 Keyboard = ReplyKeyboardMarkup(
     keyboard=[[button_1], [button_2], [button_3]], resize_keyboard=True)
 
-
+# Клавиатура под кнопки, которые внутри каждого продукта
 button_add = InlineKeyboardButton(
     text='Добавить в корзину', callback_data='add_to_thebin')
 button_go_products = InlineKeyboardButton(text='Назад', callback_data='back_p')
@@ -158,16 +160,28 @@ async def return_to_category(callback: CallbackQuery):
 # хэндлер реагирует на все кнопки product, выдает информацию о продукте
 @router.callback_query(lambda callback: callback.data.startswith('p '))
 async def get_back_data_aboutproduct(callback: CallbackQuery, state: FSMContext):
+    """
+    Следующие 4 строки находят название категории. Зачем?
+    При нажатии категории мы теряем ее название, так как переходит вглубь по уровню, в продукты
+    Чтобы достать определенную информацию о продукте, нам надо обратиться к словарю продуктов (compose_dc_products_in_exact_category)
+    Этот словарь в свою очередь внутри оттакивается от категории, то есть мы не сможем физически ничего найти, не зная категорию
+    Для этого я переработал словарь категорий. Его вид {c_1: 'Салаты'}
+    Далее в название callback-а продукта я засовываю ключ из словаря выше. Словарь продуктов {p c_1 название продукта: 'название продукта'}
+    Ловлю callback, вытаскиваю из него c_1 и на основе списка, нахожу название категории, далее уже просто создаю словарь продуктов (compose_dc_products_in_exact_category)
+    """
     distinguish_category_index = callback.data.split()[1]
     dc_for_categ = compose_dc_for_categories()[distinguish_category_index]
     product = compose_dc_products_in_exact_category(dc_for_categ)
     product_info = product[callback.data]
-    string = f"Название блюда: {product_info[0]}\nСтоимость: {product_info[1]}руб.\nКоличество\\Вес: {product_info[2]}"
+    string = f"Название блюда: {product_info[0]}\nСтоимость: {
+        product_info[1]}руб.\nКоличество\\Вес: {product_info[2]}"
 
+    # запоминает название категории, чтобы от продукта заново вернуться к продуктам по данной категории
     await state.update_data(category=dc_for_categ)
     await callback.message.edit_text(text=string, reply_markup=keyboard_add_products)
 
 
+# реагирует на кнопку назад в продуктах
 @router.callback_query(F.data == "back_p")
 async def return_to_products(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
