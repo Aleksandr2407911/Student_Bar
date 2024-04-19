@@ -5,17 +5,14 @@ import admin_handlers
 import user_handlers
 from config import load_config
 
-config = load_config('/Users/aleksandrrabinskij/Desktop/Student_Bar/.env')
+config = load_config(r'd:\coding\BOT\bot_canteen\.env')
 
 
-
-
-#функция конфигурирования и запуска бота
+# функция конфигурирования и запуска бота
 async def main():
-    #регистрируем бота и диспетчер
+    # регистрируем бота и диспетчер
     bot = Bot(token=config.tg_bot.token)
     dp = Dispatcher()
-
 
     '''# Сохранияю данные из .env для передаче данных между модулями в проекте в словаре диспетчера
     dp['host'] = config.db.host
@@ -26,12 +23,11 @@ async def main():
     dp['token'] = config.tg_bot.token
     dp['admin_ids'] = config.tg_bot.admin_ids'''
 
-
-    #регистрируем роутеры в диспетчер
+    # регистрируем роутеры в диспетчер
     dp.include_router(admin_handlers.router)
     dp.include_router(user_handlers.router)
 
-    #пропускаем накопившиемя апдейты и запускаем polling
+    # пропускаем накопившиемя апдейты и запускаем polling
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
