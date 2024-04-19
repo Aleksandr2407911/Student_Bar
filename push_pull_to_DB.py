@@ -3,7 +3,7 @@ import queries_function
 import xlsx_parse
 from config import load_config
 
-config = load_config('/Users/aleksandrrabinskij/Desktop/Student_Bar/.env')
+config = load_config(r'd:\coding\BOT\bot_canteen\.env')
 
 # выдает список меню актуального дня
 actual_day_menu = xlsx_parse.find_daily_menu()
@@ -62,10 +62,10 @@ try:
         cursorclass=pymysql.cursors.DictCursor
     )
 
-    #print(fetch_data_from_table('categories'))
-    #clear_table('product')
-    #fill_product_table(actual_day_menu)
-    #print(fetch_productlist_based_on_category('Горячее'))
+    # print(fetch_data_from_table('categories'))
+    # clear_table('product')
+    # fill_product_table(actual_day_menu)
+    # print(fetch_productlist_based_on_category('Горячее'))
 
 
 except Exception as e:
