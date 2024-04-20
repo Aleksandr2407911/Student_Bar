@@ -41,7 +41,7 @@ dc_for_days = {
 }
 
 
-book = load_workbook(filename= "Menu.xlsx")
+book = load_workbook(filename= r"d:\coding\BOT\bot_canteen\Menu.xlsx")
 
 day_in_russian = dc_for_days[day_name]
 data_in_day = book[day_in_russian]
@@ -66,9 +66,10 @@ def find_daily_menu():
         second = correct_string(data_in_day['B' + str(i)].value)
         third = correct_string(data_in_day['C' + str(i)].value)
         fourth = correct_string(data_in_day['D' + str(i)].value)
+        fifth = data_in_day['E' + str(i)].value
 
-        temp = (first, second, third, fourth)
-        if temp != (None, None, None, None):    # Проверяет, чтобы кортеж не состоял из None
-            list_for_daily_menu.append((first, second, third, fourth))
+        temp = (first, second, third, fourth, fifth)
+        if temp != (None, None, None, None, None):    # Проверяет, чтобы кортеж не состоял из None
+            list_for_daily_menu.append((first, second, third, fourth, fifth))
 
     return list_for_daily_menu

@@ -82,14 +82,14 @@ def insert_product(cursor, daily_data):
             return "Запись уже существует"
         else:
             # Если записи нет, добавление записи
-            insert_to_table_product = """INSERT INTO product (name, price, weight, category_id)
-                                            VALUES (%s, %s, %s,
+            insert_to_table_product = """INSERT INTO product (name, price, weight, picture, category_id)
+                                            VALUES (%s, %s, %s, %s,
                                             (SELECT id
                                             FROM categories
                                             WHERE category = %s)
                                             )"""
             cursor.execute(insert_to_table_product,
-                           (daily_data[0], daily_data[2], daily_data[1], daily_data[3]))
+                           (daily_data[0], daily_data[2], daily_data[1], daily_data[4], daily_data[3]))
             return 'ok'
     except Exception as e:
         return f"Error5: {e}"
