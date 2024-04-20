@@ -68,8 +68,8 @@ def find_daily_menu():
         fourth = correct_string(data_in_day['D' + str(i)].value)
         fifth = data_in_day['E' + str(i)].value
 
-        temp = (first, second, third, fourth)
-        if temp != (None, None, None, None):    # Проверяет, чтобы кортеж не состоял из None
+        temp = (first, second, third, fourth, fifth)
+        if temp != (None, None, None, None, None):    # Проверяет, чтобы кортеж не состоял из None
             list_for_daily_menu.append((first, second, third, fourth, fifth))
 
     return list_for_daily_menu
