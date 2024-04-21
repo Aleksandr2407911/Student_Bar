@@ -1,9 +1,11 @@
 from aiogram import Router
 from aiogram.filters import Command, CommandStart
 from aiogram.types import (InlineKeyboardButton, InlineKeyboardMarkup, Message,
-                            KeyboardButton, ReplyKeyboardMarkup)
+                           KeyboardButton, ReplyKeyboardMarkup)
 from filters import is_admin_filter
 from aiogram import F
+import push_pull_to_DB
+import xlsx_parse
 
 # Инициализируем роутер уровня модуля
 router = Router()
@@ -17,7 +19,8 @@ button_1 = KeyboardButton(text='Добавить меню 🍲')
 button_2 = KeyboardButton(text='Подтверждение заказов 🕐')
 
 # Создаем объект клавиатуры и добавляем кнопки главного меню
-keyboard_main = ReplyKeyboardMarkup(keyboard=[[button_1], [button_2]], resize_keyboard=True)
+keyboard_main = ReplyKeyboardMarkup(
+    keyboard=[[button_1], [button_2]], resize_keyboard=True)
 
 
 '''#Создаем объекты кнопок списка заказов нужно взять из базы данных
@@ -36,14 +39,18 @@ keyboard_orders = ReplyKeyboardMarkup(keyboard=list_buttons)'''
 async def process_start_command(message: Message):
     await message.answer(text='/start', reply_markup=keyboard_main)
 
+
 # Этот хэндлер срабатывает на сообщение <Подтверждение заказов 🕐>
 @router.message(F.text == 'Подтверждение заказов 🕐')
 async def deny_accept_order(message: Message):
-    await message.answer(text='Подтверждение заказов 🕐', reply_markup=keyboard_orders)
+    await message.answer(text='Подтверждение заказов 🕐')
+
 
 # Этот хэндлер срабатывает на сообщение <Добавить меню 🍲>
+# Обновляет БД (таблицу продуктов и категорий) при нажатии
 @router.message(F.text == 'Добавить меню 🍲')
 async def deny_accept_order(message: Message):
-    await message.answer(text='Отправьте меню (файл фотмата xl)')
-
-#комментарий
+    actual_day_menu_F = xlsx_parse.find_daily_menu()
+    push_pull_to_DB.for_update_menu_button(
+        'product', 'categories', actual_day_menu_F)
+    await message.answer('Меню добавлено')
