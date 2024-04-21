@@ -5,7 +5,7 @@ import admin_handlers
 import user_handlers
 from config import load_config
 
-config = load_config(r'd:\coding\BOT\bot_canteen\.env')
+config = load_config(r'C:\Users\Aleksandr Riabinskii\Desktop\Student_Bar\.env')
 
 
 # функция конфигурирования и запуска бота

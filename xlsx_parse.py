@@ -41,7 +41,7 @@ dc_for_days = {
 }
 
 
-book = load_workbook(filename= r"d:\coding\BOT\bot_canteen\Menu.xlsx")
+book = load_workbook(filename= r"C:\Users\Aleksandr Riabinskii\Desktop\Student_Bar\Menu.xlsx")
 
 day_in_russian = dc_for_days[day_name]
 data_in_day = book[day_in_russian]
