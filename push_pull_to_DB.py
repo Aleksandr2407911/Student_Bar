@@ -51,6 +51,28 @@ def fetch_productlist_based_on_category(category_name):
     return data
 
 
+def for_update_menu_button(table_name1, table_name2, actual_day_menu):
+    with connection.cursor() as cursor:
+        queries_function.delete_data_from_tables(cursor, table_name1)
+    connection.commit()
+
+    with connection.cursor() as cursor:
+        queries_function.delete_data_from_tables(cursor, table_name2)
+    connection.commit()
+
+    with connection.cursor() as cursor:
+        for line in actual_day_menu:
+            queries_function.insert_categories(cursor, line[3])
+    connection.commit()
+
+    with connection.cursor() as cursor:
+        for i in actual_day_menu:
+            queries_function.insert_product(cursor, i)
+    connection.commit()
+    connection.close()
+
+
+
 try:
     # Подключение к БД MySQL
     connection = pymysql.connect(
@@ -63,11 +85,14 @@ try:
     )
 
     # print(fetch_data_from_table('categories'))
-    #clear_table('product')
+
+    # clear_table('product')
     #fill_categories_table(actual_day_menu)
     #fill_product_table(actual_day_menu)
-    #print(fetch_productlist_based_on_category('Горячее'))
-    
+    #clear_table('product')
+    # clear_table('categories')
+    # print(fetch_productlist_based_on_category('Горячее'))
+    #for_update_menu_button('product', 'categories', actual_day_menu)
 
 
 except Exception as e:
