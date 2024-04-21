@@ -3,7 +3,7 @@ import queries_function
 import xlsx_parse
 from config import load_config
 
-config = load_config(r'd:\coding\BOT\bot_canteen\.env')
+config = load_config(r'/Users/aleksandrrabinskij/Desktop/Student_Bar/.env')
 
 # выдает список меню актуального дня
 actual_day_menu = xlsx_parse.find_daily_menu()
@@ -85,6 +85,7 @@ try:
     )
 
     # print(fetch_data_from_table('categories'))
+
     # clear_table('product')
     #fill_categories_table(actual_day_menu)
     #fill_product_table(actual_day_menu)

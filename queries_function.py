@@ -45,7 +45,7 @@ def insert_categories(cursor, category):
     try:
         # Проверка существует ли запись в таблице
         check_query = """SELECT COUNT(*) AS count
-                       FROM categories 
+                       FROM categories
                        WHERE category = %s"""
         cursor.execute(check_query, category)
         result = cursor.fetchone()
@@ -72,7 +72,7 @@ def insert_product(cursor, daily_data):
     try:
         # Проверка существует ли запись в таблице
         check_query = """SELECT COUNT(*) AS count
-                       FROM product 
+                       FROM product
                        WHERE name = %s"""
         cursor.execute(check_query, daily_data[0])
         result = cursor.fetchone()
