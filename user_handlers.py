@@ -82,7 +82,7 @@ def compose_dc_products_in_exact_category(category_name):
 
     for i in list_for_dc:
         info_about_certain_product = (
-            modify_string_to_correct_size(i['name']), i['price'], i['weight'])
+            modify_string_to_correct_size(i['name']), i['price'], i['weight'], i['picture'])
         key = "p " + f"{name_of_certain_category} " + i['name']
         dc_for_products[modify_string_to_correct_size(
             key)] = info_about_certain_product
@@ -90,7 +90,7 @@ def compose_dc_products_in_exact_category(category_name):
     return dc_for_products
 
 
-# Функция создает клавиатуру на основе словаря про категории
+# Функция создает клавиатуру на словаря про категории
 async def build_inline_keyboard_for_categories(buttons):
     """
     Сначала создает элемент клавиатуры keyboard_list
@@ -159,6 +159,15 @@ async def return_to_category(callback: CallbackQuery):
 # хэндлер реагирует на все кнопки product, выдает информацию о продукте
 @router.callback_query(lambda callback: callback.data.startswith('p '))
 async def get_back_data_aboutproduct(callback: CallbackQuery, state: FSMContext):
+    """
+    Следующие 4 строки находят название категории. Зачем?
+    При нажатии категории мы теряем ее название, так как переходит вглубь по уровню, в продукты
+    Чтобы достать определенную информацию о продукте, нам надо обратиться к словарю продуктов (compose_dc_products_in_exact_category)
+    Этот словарь в свою очередь внутри оттакивается от категории, то есть мы не сможем физически ничего найти, не зная категорию
+    Для этого я переработал словарь категорий. Его вид {c_1: 'Салаты'}
+    Далее в название callback-а продукта я засовываю ключ из словаря выше. Словарь продуктов {p c_1 название продукта: 'название продукта'}
+    Ловлю callback, вытаскиваю из него c_1 и на основе списка, нахожу название категории, далее уже просто создаю словарь продуктов (compose_dc_products_in_exact_category)
+    """
     distinguish_category_index = callback.data.split()[1]
     dc_for_categ = compose_dc_for_categories()[distinguish_category_index]
     product = compose_dc_products_in_exact_category(dc_for_categ)
@@ -167,17 +176,19 @@ async def get_back_data_aboutproduct(callback: CallbackQuery, state: FSMContext)
 
     await state.update_data(category=dc_for_categ, data_product={'name': product_info[0],
                                                                  'cost': product_info[1]})
-    await callback.message.edit_text(text=string, reply_markup=keyboard_add_products)
-
-
-@router.callback_query(F.data == "back_p")
-async def return_to_products(callback: CallbackQuery, state: FSMContext):
-    data = await state.get_data()
-    # Получаем сохраненное имя категории из состояния
-    category = data.get('category')
     await callback.answer()
-    await callback.message.edit_text(text='Меню 🍲', reply_markup=await build_inline_keyboard_for_products(compose_dc_products_in_exact_category(category)))
+    # отправляет новое сообщение с фоткой и характеристиками продукта
+    await callback.message.answer_photo(photo=product_info[3], caption=string, reply_markup=keyboard_add_products)
 
+
+# реагирует на кнопку назад в продуктах
+@router.callback_query(F.data == "back_p")
+async def return_to_products(callback: CallbackQuery):
+    """
+    При нажатии кнопки назад удаляет сообщение с фоткой и характеристиками продукта
+    """
+    await callback.answer()
+    await callback.message.delete()
 
 
 
@@ -242,7 +253,7 @@ async def change_prosucts(callback: CallbackQuery, state: FSMContext):
     if temp_bin:
         temp_amount = amount_bin(temp_bin, callback.from_user.id)
         await callback.answer()  # Убирает мигание инлайн кнопки
-        await callback.message.edit_text(text=f'Общая стоимость: {await temp_amount}', 
+        await callback.message.edit_text(text=f'Общая стоимость: {await temp_amount}',
                                         reply_markup=await build_inline_keyboard_for_bin(temp_bin, callback.from_user.id))
     else:
         await callback.answer('В корзине ничего нет')
@@ -273,7 +284,7 @@ async def delete_product_from_bin_menu(callback: CallbackQuery, state: FSMContex
     await callback.answer()
     await callback.message.edit_text(text='Удалить продукт', reply_markup= keyboard_delete_product)
 
-# Функция для удаления продукта при нажатии на кнопку 'удалить продукт' 
+# Функция для удаления продукта при нажатии на кнопку 'удалить продукт'
 # Удаляет продукт по названию
 async def delete_product(name, user_id):
     count = -1
@@ -284,7 +295,7 @@ async def delete_product(name, user_id):
             print(f"продукт {product['name']} удален")
             break
     print("Ничего не удалилось")
-        
+
 
 
 @router.callback_query(F.data == "delete_products")
@@ -297,9 +308,9 @@ async def delete_product_from_bin(callback: CallbackQuery, state: FSMContext):
     print(name) #_binШаурма с курицей
     temp_amount = amount_bin(temp_bin, callback.from_user.id) # не нужно await
     await callback.answer("Продукт удален из корзины")
-    await callback.message.edit_text(text=f'Общая стоимость: {await temp_amount}', 
+    await callback.message.edit_text(text=f'Общая стоимость: {await temp_amount}',
                                      reply_markup=await build_inline_keyboard_for_bin(temp_bin, callback.from_user.id))
-    
+
 
 
 
@@ -311,5 +322,5 @@ async def return_to_bin_menu(callback: CallbackQuery, state: FSMContext):
     # Получаем сохраненное имя продукта из состояния
     temp_amount = amount_bin(temp_bin, callback.from_user.id) # не нужно await
     await callback.answer('Назад')
-    await callback.message.edit_text(text=f'Общая стоимость: {await temp_amount}', 
+    await callback.message.edit_text(text=f'Общая стоимость: {await temp_amount}',
                                      reply_markup=await build_inline_keyboard_for_bin(temp_bin, callback.from_user.id))

@@ -3,7 +3,7 @@ import queries_function
 import xlsx_parse
 from config import load_config
 
-config = load_config(r'/Users/aleksandrrabinskij/Desktop/Student_Bar/.env')
+config = load_config(r'C:\Users\Aleksandr Riabinskii\Desktop\Student_Bar\.env')
 
 # выдает список меню актуального дня
 actual_day_menu = xlsx_parse.find_daily_menu()
