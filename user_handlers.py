@@ -222,6 +222,8 @@ async def build_inline_keyboard_for_bin(temp_bin, id):
     keyboard_list = InlineKeyboardBuilder()
     for product in temp_bin[id]:
         keyboard_list.add(InlineKeyboardButton(text=f"{product['name']}/{product['cost']}", callback_data=f"_bin{product['name']}"))
+    back_button = InlineKeyboardButton(text="Назад", callback_data="back_to_bin_menu")
+    keyboard_list.row(back_button)
     return keyboard_list.adjust(2).as_markup()
 
 
@@ -236,7 +238,78 @@ async def amount_bin(temp_bin, id):
 
 
 @router.callback_query(F.data == "change_products")
-async def change_prosucts(callback: CallbackQuery, state: FSMContex t):
-    temp_amount = amount_bin(temp_bin, callback.from_user.id)
-    await callback.answer()  # Убирает мигание инлайн кнопки
-    await callback.message.edit_text(text=f'Общая стоимость: {await temp_amount}', reply_markup=await build_inline_keyboard_for_bin(temp_bin, callback.from_user.id))
+async def change_prosucts(callback: CallbackQuery, state: FSMContext):
+    if temp_bin:
+        temp_amount = amount_bin(temp_bin, callback.from_user.id)
+        await callback.answer()  # Убирает мигание инлайн кнопки
+        await callback.message.edit_text(text=f'Общая стоимость: {await temp_amount}', 
+                                        reply_markup=await build_inline_keyboard_for_bin(temp_bin, callback.from_user.id))
+    else:
+        await callback.answer('В корзине ничего нет')
+
+
+
+@router.callback_query(F.data == "back_to_bin_menu")
+async def return_to_bin_menu(callback: CallbackQuery, state: FSMContext):
+    #data = await state.get_data()
+    # Получаем сохраненное имя категории из состояния
+    #category = data.get('category')
+    await callback.answer()
+    await callback.message.edit_text(text='Корзина 🧺', reply_markup= keyboard_bin)
+
+
+
+
+# Клавиатура для удаления и go_back корзины
+button_delete_prod = InlineKeyboardButton(text='Удалить из корзины', callback_data='delete_products')
+button_go_back_to_products_bin = InlineKeyboardButton(text='Назад', callback_data='go_back_to_products_bin')
+
+keyboard_delete_product = InlineKeyboardMarkup(inline_keyboard=[[button_delete_prod], [button_go_back_to_products_bin]])
+
+
+@router.callback_query(lambda callback: callback.data.startswith('_bin'))
+async def delete_product_from_bin_menu(callback: CallbackQuery, state: FSMContext):
+    await state.update_data(data_product= callback.data)
+    await callback.answer()
+    await callback.message.edit_text(text='Удалить продукт', reply_markup= keyboard_delete_product)
+
+# Функция для удаления продукта при нажатии на кнопку 'удалить продукт' 
+# Удаляет продукт по названию
+async def delete_product(name, user_id):
+    count = -1
+    for product in temp_bin[user_id]:
+        count += 1
+        if name == f"_bin{product.get('name', 'no')}":
+            temp_bin[user_id].pop(count)
+            print(f"продукт {product['name']} удален")
+            break
+    print("Ничего не удалилось")
+        
+
+
+@router.callback_query(F.data == "delete_products")
+async def delete_product_from_bin(callback: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    # Получаем сохраненное имя продукта из состояния
+    name = data.get('data_product')
+    await delete_product(name, callback.from_user.id)
+    print(temp_bin) #{544595768: [{'name': 'Шаурма с курицей', 'cost': 196}]}
+    print(name) #_binШаурма с курицей
+    temp_amount = amount_bin(temp_bin, callback.from_user.id) # не нужно await
+    await callback.answer("Продукт удален из корзины")
+    await callback.message.edit_text(text=f'Общая стоимость: {await temp_amount}', 
+                                     reply_markup=await build_inline_keyboard_for_bin(temp_bin, callback.from_user.id))
+    
+
+
+
+@router.callback_query(F.data == "go_back_to_products_bin")
+async def return_to_bin_menu(callback: CallbackQuery, state: FSMContext):
+    #data = await state.get_data()
+    # Получаем сохраненное имя категории из состояния
+    #category = data.get('category')
+    # Получаем сохраненное имя продукта из состояния
+    temp_amount = amount_bin(temp_bin, callback.from_user.id) # не нужно await
+    await callback.answer('Назад')
+    await callback.message.edit_text(text=f'Общая стоимость: {await temp_amount}', 
+                                     reply_markup=await build_inline_keyboard_for_bin(temp_bin, callback.from_user.id))
