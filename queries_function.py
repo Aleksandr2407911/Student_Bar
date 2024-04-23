@@ -1,3 +1,4 @@
+from datetime import date
 def delete_data_from_tables(cursor, table_name):
     """
     Удаление данных из любой таблицы
@@ -23,7 +24,7 @@ def delete_data_from_tables(cursor, table_name):
 
 def get_rows_from_table(cursor, table_name):
     """
-    Выводит все записи в таблице в виде списка словарей
+    Запрос достает все записи в таблице
     """
     try:
         fetch_query = f"""SELECT *
@@ -62,6 +63,8 @@ def insert_categories(cursor, category):
     except Exception as e:
         return f"Error1: {e}"
 
+
+# Использовать для счетчика количесва продуктов в заказе 
 
 def insert_product(cursor, daily_data):
     """
@@ -108,3 +111,39 @@ def fetch_product_based_on_category(cursor, category):
         cursor.execute(category_products, category)
     except Exception as e:
         return f"Error6: {e}"
+    
+# Функция будет считать сумму покупки, принимает на вход id пользователя и временную корзину
+# Возвтращает сумму заказа
+def amount_bin(temp_bin, id):
+    amount = 0
+    for product in temp_bin[id]:
+        amount += product['cost']
+    return amount
+
+def insert_order(cursor, temp_bin, id, time):
+    """
+    Вставляет заказ в таблицу order, принимает временное хранилище, id пользователя и текущее время
+    """
+    try:
+        insert_to_table_order = """INSERT INTO Orders (user_tg_id, total_price, time, status)
+                                        VALUES (%s, %s, %s, 0)"""
+        amount = amount_bin(temp_bin, id)
+        cursor.execute(insert_to_table_order,
+                        (id, amount, time))
+        return 'ok'
+    except Exception as e:
+        return f"Error5: {e}"
+    
+def fetch_orders(cursor):
+    """
+    Достает все данные из таблицы orders опираясь на сегодняшнюю дату и статуса заказа FALSE
+    """
+    try:
+        fetch_orders_from_table = """SELECT *
+                                     FROM orders
+                                     WHERE DATE(time) = %s AND status = FALSE"""
+        cursor.execute(fetch_orders_from_table, (date.today().strftime("%Y-%m-%d")))
+        return 'Данных о заказах извлечены'
+    except Exception as e:
+        return f"Error5: {e}"
+    

@@ -3,7 +3,8 @@ import queries_function
 import xlsx_parse
 from config import load_config
 
-config = load_config(r'C:\Users\Aleksandr Riabinskii\Desktop\Student_Bar\.env')
+
+config = load_config(r'/Users/aleksandrrabinskij/Desktop/Student_Bar/.env')
 
 # выдает список меню актуального дня
 actual_day_menu = xlsx_parse.find_daily_menu()
@@ -26,7 +27,7 @@ def clear_table(table_name):
     connection.close()
 
 
-# достает информацию из любой таблицу в БД
+# достает информацию из любой таблицу в БД в виде списка словарей
 def fetch_data_from_table(table_name):
     with connection.cursor() as cursor:
         queries_function.get_rows_from_table(cursor, table_name)
@@ -72,6 +73,20 @@ def for_update_menu_button(table_name1, table_name2, actual_day_menu):
     connection.close()
 
 
+# добавляет в таблиицу orders заказ
+def insert_order_to_table(temp_bin, id, time):
+    with connection.cursor() as cursor:
+        queries_function.insert_order(cursor, temp_bin, id, time)
+    connection.commit()
+    connection.close()
+
+# Извлекает сегодняшнии заказы из таблицы со статусом FALSE
+def fetch_orders_from_table():
+    with connection.cursor() as cursor:
+        queries_function.fetch_orders(cursor)
+    data = cursor.fetchall()
+    return data
+
 
 try:
     # Подключение к БД MySQL
@@ -89,11 +104,17 @@ try:
     # clear_table('product')
     #fill_categories_table(actual_day_menu)
     #fill_product_table(actual_day_menu)
-    #clear_table('product')
+    #clear_table('orders')
     # clear_table('categories')
     # print(fetch_productlist_based_on_category('Горячее'))
     #for_update_menu_button('product', 'categories', actual_day_menu)
+    #insert_order_to_table({544595768: [{'name': 'Чизкейк-брауни', 'cost': 165}]}, 544595768, '2023-03-08 15:42:18')
+    print(fetch_orders_from_table())
 
 
 except Exception as e:
     print('Error3:', e)
+
+
+
+

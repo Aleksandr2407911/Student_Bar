@@ -9,6 +9,7 @@ import push_pull_to_DB
 from aiogram import F
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 import asyncio
+import datetime
 
 # инициализируем роутер уровня модуля
 router = Router()
@@ -250,13 +251,13 @@ async def amount_bin(temp_bin, id):
 
 @router.callback_query(F.data == "change_products")
 async def change_prosucts(callback: CallbackQuery, state: FSMContext):
-    if temp_bin:
+    if callback.from_user.id in temp_bin:
         temp_amount = amount_bin(temp_bin, callback.from_user.id)
         await callback.answer()  # Убирает мигание инлайн кнопки
         await callback.message.edit_text(text=f'Общая стоимость: {await temp_amount}',
                                         reply_markup=await build_inline_keyboard_for_bin(temp_bin, callback.from_user.id))
     else:
-        await callback.answer('В корзине ничего нет')
+        await callback.answer(text='В корзине ничего нет', show_alert=True)
 
 
 
@@ -307,7 +308,7 @@ async def delete_product_from_bin(callback: CallbackQuery, state: FSMContext):
     print(temp_bin) #{544595768: [{'name': 'Шаурма с курицей', 'cost': 196}]}
     print(name) #_binШаурма с курицей
     temp_amount = amount_bin(temp_bin, callback.from_user.id) # не нужно await
-    await callback.answer("Продукт удален из корзины")
+    await callback.answer(text="Продукт удален из корзины")
     await callback.message.edit_text(text=f'Общая стоимость: {await temp_amount}',
                                      reply_markup=await build_inline_keyboard_for_bin(temp_bin, callback.from_user.id))
 
@@ -324,3 +325,10 @@ async def return_to_bin_menu(callback: CallbackQuery, state: FSMContext):
     await callback.answer('Назад')
     await callback.message.edit_text(text=f'Общая стоимость: {await temp_amount}',
                                      reply_markup=await build_inline_keyboard_for_bin(temp_bin, callback.from_user.id))
+    
+
+@router.callback_query(F.data == 'to_order')
+async def send_products_to_order(callback: CallbackQuery, state: FSMContext):
+    now_datetime = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    push_pull_to_DB.insert_order_to_table(temp_bin, callback.from_user.id, now_datetime)
+    del temp_bin[callback.from_user.id]
