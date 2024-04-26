@@ -10,6 +10,7 @@ from aiogram import F
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 import asyncio
 import datetime
+from aiogram.fsm.state import StatesGroup, State
 
 # инициализируем роутер уровня модуля
 router = Router()
@@ -18,6 +19,10 @@ router = Router()
 
 class register_commands(StatesGroup):
     category_name = State()
+
+
+class Send_Address(StatesGroup):
+    Waiting_for_Address = State()
 
 
 # Создаем объект кнопок главного меню
@@ -212,8 +217,9 @@ async def add_to_the_bin(callback: CallbackQuery, state: FSMContext):
 # USER BIN
 button_change_prod = InlineKeyboardButton(text='Изменить продукты 🍲', callback_data='change_products')
 button_to_order = InlineKeyboardButton(text='Отправить заказ 🧺', callback_data='to_order')
+button_input_adress = InlineKeyboardButton(text='Поменять адресс доставки', callback_data='input_address')
 
-keyboard_bin = InlineKeyboardMarkup(inline_keyboard=[[button_change_prod], [button_to_order]])
+keyboard_bin = InlineKeyboardMarkup(inline_keyboard=[[button_change_prod], [button_to_order], [button_input_adress]])
 
 
 @router.message(F.text == 'Корзина 🧺')
@@ -236,7 +242,7 @@ async def build_inline_keyboard_for_bin(temp_bin, id):
         keyboard_list.add(InlineKeyboardButton(text=f"{product['name']}/{product['cost']}", callback_data=f"_bin{product['name']}"))
     back_button = InlineKeyboardButton(text="Назад", callback_data="back_to_bin_menu")
     keyboard_list.row(back_button)
-    return keyboard_list.adjust(2).as_markup()
+    return keyboard_list.adjust(1).as_markup()
 
 
 
@@ -332,3 +338,28 @@ async def send_products_to_order(callback: CallbackQuery, state: FSMContext):
     now_datetime = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     push_pull_to_DB.insert_order_to_table(temp_bin, callback.from_user.id, now_datetime)
     del temp_bin[callback.from_user.id]
+    
+
+@router.callback_query(F.data == "input_address")
+async def reply_to_change_text(callback: CallbackQuery, state: FSMContext):
+    # await state.update_data(data_product=callback.data)
+    await callback.answer(show_alert=True)
+    await callback.message.edit_text(text='Введите новый адрес доставки')
+    await state.set_state(Send_Address.Waiting_for_Address)
+
+
+# Ввод address
+@router.message(Send_Address.Waiting_for_Address)
+async def process_password_input(message: Message, state: FSMContext):
+    global buttons
+    # Ловит сообщение
+    entered = message.text.strip()
+    data = await state.get_data()
+    # Получаем сохраненное имя продукта из состояния
+    name = data.get('data_product')[5:]
+    database[name][0] = entered
+    buttons = compose_dc_for_orders(database)
+
+    # Сброс состояния FSM
+    await state.clear()
+    await message.answer(text=str(database))
