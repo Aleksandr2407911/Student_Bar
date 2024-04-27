@@ -64,7 +64,7 @@ def insert_categories(cursor, category):
         return f"Error1: {e}"
 
 
-# Использовать для счетчика количесва продуктов в заказе 
+# Использовать для счетчика количесва продуктов в заказе
 
 def insert_product(cursor, daily_data):
     """
@@ -111,7 +111,7 @@ def fetch_product_based_on_category(cursor, category):
         cursor.execute(category_products, category)
     except Exception as e:
         return f"Error6: {e}"
-    
+
 # Функция будет считать сумму покупки, принимает на вход id пользователя и временную корзину
 # Возвтращает сумму заказа
 def amount_bin(temp_bin, id):
@@ -130,10 +130,10 @@ def insert_order(cursor, temp_bin, id, time):
         amount = amount_bin(temp_bin, id)
         cursor.execute(insert_to_table_order,
                         (id, amount, time))
-        return 'ok'
+        print('Заказ добавлен')
     except Exception as e:
-        return f"Error5: {e}"
-    
+        print(f"Error5: {e}")
+
 def fetch_orders(cursor):
     """
     Достает все данные из таблицы orders опираясь на сегодняшнюю дату и статуса заказа FALSE
@@ -146,4 +146,31 @@ def fetch_orders(cursor):
         return 'Данных о заказах извлечены'
     except Exception as e:
         return f"Error5: {e}"
-    
+
+
+def delete_address(cursor, user_tg_id):
+    """
+    Удаляет данные пользователя если он существует
+    """
+    try:
+        insert_to_table_address = """DELETE FROM users
+                                     WHERE user_tg_id = %s"""
+        cursor.execute(insert_to_table_address,
+                        (user_tg_id))
+        print('Адресс удален')
+    except Exception as e:
+        print(f"Error5: {e}")
+
+
+def insert_address(cursor, user_tg_id, address):
+    """
+    Добавляет аддресс пользователя и его id в БД
+    """
+    try:
+        insert_to_table_address = """INSERT INTO users (user_tg_id, address)
+                                     VALUES (%s, %s);"""
+        cursor.execute(insert_to_table_address,
+                        (user_tg_id, address))
+        print('Адресс добавлен')
+    except Exception as e:
+        print(f"Error5: {e}")

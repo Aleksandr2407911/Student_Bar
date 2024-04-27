@@ -331,14 +331,19 @@ async def return_to_bin_menu(callback: CallbackQuery, state: FSMContext):
     await callback.answer('Назад')
     await callback.message.edit_text(text=f'Общая стоимость: {await temp_amount}',
                                      reply_markup=await build_inline_keyboard_for_bin(temp_bin, callback.from_user.id))
-    
+
+
 
 @router.callback_query(F.data == 'to_order')
 async def send_products_to_order(callback: CallbackQuery, state: FSMContext):
     now_datetime = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     push_pull_to_DB.insert_order_to_table(temp_bin, callback.from_user.id, now_datetime)
     del temp_bin[callback.from_user.id]
-    
+    await callback.answer(show_alert=True)
+    await callback.message.edit_text(text='Заказ отправлен')
+
+
+
 
 @router.callback_query(F.data == "input_address")
 async def reply_to_change_text(callback: CallbackQuery, state: FSMContext):
@@ -348,18 +353,17 @@ async def reply_to_change_text(callback: CallbackQuery, state: FSMContext):
     await state.set_state(Send_Address.Waiting_for_Address)
 
 
+
+
 # Ввод address
 @router.message(Send_Address.Waiting_for_Address)
 async def process_password_input(message: Message, state: FSMContext):
     global buttons
     # Ловит сообщение
-    entered = message.text.strip()
-    data = await state.get_data()
-    # Получаем сохраненное имя продукта из состояния
-    name = data.get('data_product')[5:]
-    database[name][0] = entered
-    buttons = compose_dc_for_orders(database)
-
+    address = message.text.strip()
+    user_tg_id = message.from_user.id
+    # Созраняю адресс пользователя в базу данных
+    push_pull_to_DB.insert_address_to_table(user_tg_id, address)
     # Сброс состояния FSM
     await state.clear()
-    await message.answer(text=str(database))
+    await message.answer(text=str("Aдрес сохранен в базу данных. Если хотите поменять адресс повторите операцию"))

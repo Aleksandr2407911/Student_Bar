@@ -113,7 +113,7 @@ button_deny_order = InlineKeyboardButton(text='Отклонить заказ', c
 
 keyboard_cd_order = InlineKeyboardMarkup(inline_keyboard=[[button_confirm_order], [button_deny_order]])
 
-# Этот хэндлер срабатывает на нажатие кнопки заказа 
+# Этот хэндлер срабатывает на нажатие кнопки заказа
 # И отображает все его информацию с двумя кнопками принять, отклонись с комментарием
 @router.callback_query(lambda callback: callback.data.startswith('o_'))
 async def reply_to_order(callback: CallbackQuery, state: FSMContext):

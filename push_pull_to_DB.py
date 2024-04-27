@@ -4,7 +4,7 @@ import xlsx_parse
 from config import load_config
 
 
-config = load_config(r'/Users/aleksandrrabinskij/Desktop/Student_Bar/.env')
+config = load_config(r'C:\Users\Aleksandr Riabinskii\Desktop\Student_Bar\.env')
 
 # выдает список меню актуального дня
 actual_day_menu = xlsx_parse.find_daily_menu()
@@ -87,6 +87,16 @@ def fetch_orders_from_table():
     data = cursor.fetchall()
     return data
 
+# добавляет в таблиицу users address пользователя
+def insert_address_to_table(user_tg_id, address):
+    with connection.cursor() as cursor:
+        queries_function.delete_address(cursor, user_tg_id)
+    connection.commit()
+    with connection.cursor() as cursor:
+        queries_function.insert_address(cursor, user_tg_id, address)
+    connection.commit()
+    connection.close()
+
 
 try:
     # Подключение к БД MySQL
@@ -109,12 +119,9 @@ try:
     # print(fetch_productlist_based_on_category('Горячее'))
     #for_update_menu_button('product', 'categories', actual_day_menu)
     #insert_order_to_table({544595768: [{'name': 'Чизкейк-брауни', 'cost': 165}]}, 544595768, '2023-03-08 15:42:18')
-    print(fetch_orders_from_table())
+    #insert_address_to_table(544345534, "Вилиса Лациса 18")
+    #print(fetch_orders_from_table())
 
 
 except Exception as e:
     print('Error3:', e)
-
-
-
-
