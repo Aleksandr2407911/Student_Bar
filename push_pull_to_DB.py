@@ -4,7 +4,7 @@ import xlsx_parse
 from config import load_config
 
 
-config = load_config(r'C:\Users\Aleksandr Riabinskii\Desktop\Student_Bar\.env')
+config = load_config(r'/Users/aleksandrrabinskij/Desktop/Student_Bar/.env')
 
 # выдает список меню актуального дня
 actual_day_menu = xlsx_parse.find_daily_menu()
@@ -81,9 +81,9 @@ def insert_order_to_table(temp_bin, id, time):
     connection.close()
 
 # Извлекает сегодняшнии заказы из таблицы со статусом FALSE
-def fetch_orders_from_table():
+def fetch_orders_from_table(status):
     with connection.cursor() as cursor:
-        queries_function.fetch_orders(cursor)
+        queries_function.fetch_orders(cursor, status)
     data = cursor.fetchall()
     return data
 

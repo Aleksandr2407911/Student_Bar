@@ -134,19 +134,19 @@ def insert_order(cursor, temp_bin, id, time):
     except Exception as e:
         print(f"Error5: {e}")
 
-def fetch_orders(cursor):
+def fetch_orders(cursor, status):
     """
     Достает все данные из таблицы orders опираясь на сегодняшнюю дату и статуса заказа FALSE
     """
     try:
         fetch_orders_from_table = """SELECT *
                                      FROM orders
-                                     WHERE DATE(time) = %s AND status = FALSE"""
-        cursor.execute(fetch_orders_from_table, (date.today().strftime("%Y-%m-%d")))
+                                     WHERE DATE(time) = %s AND status = %s"""
+        cursor.execute(fetch_orders_from_table, (date.today().strftime("%Y-%m-%d"), status))
         return 'Данных о заказах извлечены'
     except Exception as e:
         return f"Error5: {e}"
-
+    
 
 def delete_address(cursor, user_tg_id):
     """

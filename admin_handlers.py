@@ -63,13 +63,13 @@ def modify_string_to_correct_size(string):
     return string
 
 # Функция для создания словарей под категории для будущего использования в инлайн кнопках (на основе БД)
-def compose_dc_for_orders():
+def compose_dc_for_orders(status, callback_start):
     """
     Создает словарь, на основе БД таблицы orders, типа {ключ(callback): значение(text)}
     Цели создание словаря: удобство создавать кнопки и их callback, а также при нажатии кнопки быстро находит значение
     Впереди ключа ставлю o_ сокращено order_, для дальнейшего удобство при ловле в хендлер
     """
-    list_for_dc = push_pull_to_DB.fetch_orders_from_table()
+    list_for_dc = push_pull_to_DB.fetch_orders_from_table(status)
     dc_for_orders = {}
     count = 0
     print(list_for_dc)
@@ -77,7 +77,7 @@ def compose_dc_for_orders():
     for i in list_for_dc:
         count += 1
         dc_for_orders[modify_string_to_correct_size(
-            f"o_{count}")] = modify_string_to_correct_size(i['id'])
+            f"{callback_start}{count}")] = modify_string_to_correct_size(i['id'])
     print(dc_for_orders)
     return dc_for_orders
 
@@ -100,11 +100,61 @@ async def build_inline_keyboard_for_orders(buttons):
     return keyboard_list.adjust(1).as_markup()
 
 
-# Этот хэндлер срабатывает на сообщение <Подтверждение заказов 🕐>
+
+'''# Этот хэндлер срабатывает на сообщение <Подтверждение заказов 🕐>
 @router.message(F.text == 'Подтверждение заказов 🕐')
 async def deny_accept_order(message: Message):
     print('хэндлер сработал')
-    await message.answer(text='Подтверждение заказов 🕐', reply_markup=await build_inline_keyboard_for_orders(compose_dc_for_orders()))
+    await message.answer(text='Подтверждение заказов 🕐', 
+                         reply_markup=await build_inline_keyboard_for_orders(compose_dc_for_orders()))'''
+
+
+
+# Клавиатура для просмотра типов заказов
+button_for_confirm = InlineKeyboardButton(text='Требуют подтверждения', callback_data='for_confirm')
+button_in_work = InlineKeyboardButton(text='В работе', callback_data='in_work')
+button_completed = InlineKeyboardButton(text='Выполненные', callback_data='completed')
+
+keyboard_orders = InlineKeyboardMarkup(inline_keyboard=[[button_for_confirm], [button_in_work], [button_completed]])
+
+
+# Этот хэндлер срабатывает на сообщение <Подтверждение заказов 🕐>
+@router.message(F.text == 'Подтверждение заказов 🕐')
+async def types_of_orders(message: Message):
+    print('хэндлер сработал')
+    await message.answer(text='Заказы 🕐', 
+                         reply_markup=keyboard_orders)
+
+@router.callback_query(F.data == "for_confirm")
+async def orders_for_confirm(callback: CallbackQuery, state: FSMContext):
+    #data = await state.get_data()
+    # Получаем сохраненное имя категории из состояния
+    #category = data.get('category')
+    await callback.answer()
+    await callback.message.edit_text(text='Подтверждение заказов 🕐', 
+                                     reply_markup= await build_inline_keyboard_for_orders(compose_dc_for_orders('for_conf', 0)))
+
+
+
+@router.callback_query(F.data == "in_work")
+async def orders_for_confirm(callback: CallbackQuery, state: FSMContext):
+    #data = await state.get_data()
+    # Получаем сохраненное имя категории из состояния
+    #category = data.get('category')
+    await callback.answer()
+    await callback.message.edit_text(text='Заказы в работе', 
+                                     reply_markup= await build_inline_keyboard_for_orders(compose_dc_for_orders('in_w', 3)))
+    
+
+@router.callback_query(F.data == "completed")
+async def orders_for_confirm(callback: CallbackQuery, state: FSMContext):
+    #data = await state.get_data()
+    # Получаем сохраненное имя категории из состояния
+    #category = data.get('category')
+    await callback.answer()
+    await callback.message.edit_text(text='Заказы в работе', 
+                                     reply_markup= await build_inline_keyboard_for_orders(compose_dc_for_orders('comp', 1)))
+    
 
 
 # Клавиатура подтверждения и удаления заказа
@@ -113,10 +163,32 @@ button_deny_order = InlineKeyboardButton(text='Отклонить заказ', c
 
 keyboard_cd_order = InlineKeyboardMarkup(inline_keyboard=[[button_confirm_order], [button_deny_order]])
 
-# Этот хэндлер срабатывает на нажатие кнопки заказа
+# Этот хэндлер срабатывает на нажатие кнопки заказа 
 # И отображает все его информацию с двумя кнопками принять, отклонись с комментарием
-@router.callback_query(lambda callback: callback.data.startswith('o_'))
+@router.callback_query(lambda callback: callback.data.startswith('for_conf'))
 async def reply_to_order(callback: CallbackQuery, state: FSMContext):
     await state.update_data(data_product=callback.data)
     await callback.answer()
     await callback.message.edit_text(text='Ответить на заказ', reply_markup=keyboard_cd_order)
+
+
+# Клавиатура заказа в работе
+button_3_minetes = InlineKeyboardButton(text='Курьер будут через 3 минут', callback_data='3_minetes')
+button_delays = InlineKeyboardButton(text='Курьер задерживается', callback_data='delays')
+button_order_completed = InlineKeyboardButton(text='Заказ выполнен', callback_data='order_completed')
+
+keyboard_in_work = InlineKeyboardMarkup(inline_keyboard=[[button_3_minetes], [button_delays], [button_order_completed]])
+
+
+@router.callback_query(lambda callback: callback.data.startswith('in_w'))
+async def reply_to_order(callback: CallbackQuery, state: FSMContext):
+    await state.update_data(data_product=callback.data)
+    await callback.answer()
+    await callback.message.edit_text(text='Сообщить о заказе', reply_markup=keyboard_in_work)
+
+# Тут должно быть описание товара при нажатии на заказ
+'''@router.callback_query(lambda callback: callback.data.startswith('comp'))
+async def reply_to_order(callback: CallbackQuery, state: FSMContext):
+    await state.update_data(data_product=callback.data)
+    await callback.answer()
+    await callback.message.edit_text(text='Сообщить о заказе', reply_markup=keyboard_in_work)'''
