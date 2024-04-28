@@ -1,7 +1,7 @@
 from aiogram.types import Message
 from config import load_config
 
-config = load_config(r'/Users/aleksandrrabinskij/Desktop/Student_Bar/.env')
+config = load_config(r'C:\Users\Aleksandr Riabinskii\Desktop\Student_Bar\.env')
 
 
 def is_admin_filter(message: Message) -> bool:
